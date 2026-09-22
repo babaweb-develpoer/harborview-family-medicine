@@ -482,11 +482,14 @@ textarea:focus-visible {
   gap: 64px;
   align-items: center;
 }
-.about-media img {
+.about-media img,
+.about-media video {
+  width: 100%;
   border-radius: var(--radius-card);
   border: 1px solid var(--border);
   aspect-ratio: 4 / 3;
   object-fit: cover;
+  display: block;
 }
 .about-copy h2 {
   font-size: clamp(1.7rem, 3vw, 2.3rem);

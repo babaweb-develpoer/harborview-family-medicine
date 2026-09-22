@@ -3,21 +3,45 @@
 
   document.getElementById("year").textContent = new Date().getFullYear();
 
-  /* ---------------- Hero video: respect reduced motion ---------------- */
+  /* ---------------- Background videos: reduced motion + lazy play ---------------- */
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const heroVideo = document.getElementById("heroVideo");
-  if (heroVideo) {
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const syncMotionPreference = () => {
-      if (prefersReducedMotion.matches) {
-        heroVideo.pause();
-        heroVideo.removeAttribute("autoplay");
-      } else {
-        heroVideo.setAttribute("autoplay", "");
-        heroVideo.play().catch(() => {});
-      }
-    };
-    syncMotionPreference();
-    prefersReducedMotion.addEventListener("change", syncMotionPreference);
+  const bgVideos = Array.from(document.querySelectorAll(".bg-video"));
+
+  function syncHeroMotionPreference() {
+    if (!heroVideo) return;
+    if (prefersReducedMotion.matches) {
+      heroVideo.pause();
+      heroVideo.removeAttribute("autoplay");
+    } else {
+      heroVideo.setAttribute("autoplay", "");
+      heroVideo.play().catch(() => {});
+    }
+  }
+  syncHeroMotionPreference();
+  prefersReducedMotion.addEventListener("change", syncHeroMotionPreference);
+
+  // Below-the-fold videos (no autoplay attribute): only play while in view,
+  // and never play at all if the visitor prefers reduced motion.
+  const lazyVideos = bgVideos.filter((v) => v !== heroVideo && !v.hasAttribute("autoplay"));
+  if (lazyVideos.length && "IntersectionObserver" in window) {
+    const videoObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (prefersReducedMotion.matches) {
+            entry.target.pause();
+            return;
+          }
+          if (entry.isIntersecting) {
+            entry.target.play().catch(() => {});
+          } else {
+            entry.target.pause();
+          }
+        });
+      },
+      { threshold: 0.4 }
+    );
+    lazyVideos.forEach((v) => videoObserver.observe(v));
   }
 
   /* ---------------- Mobile nav ---------------- */
